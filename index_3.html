@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-darkest: #1a1a1a;
+            --bg-dark: #2d2d2d;
+            --bg-card: #1e1e1e;
+            --bg-elevated: #252525;
+            --accent-orange: #d97757;
+            --accent-coral: #d77878;
+            --accent-purple: #9b87f5;
+            --accent-blue: #7fa5d9;
+            --text-primary: #e8e8e8;
+            --text-secondary: #b8b8b8;
+            --text-muted: #808080;
+            --border: #3a3a3a;
+            --success: #7fb069;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-darkest);
+            color: var(--text-primary);
+            padding-bottom: 120px;
+        }
+        
+        .app { max-width: 1800px; margin: 0 auto; padding: 1rem; }
+        
+        .header {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border);
+        }
+        
+        .logo { 
+            font-size: 1.5rem; 
+            font-weight: 800; 
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .quote { font-style: italic; color: var(--text-secondary); font-size: 0.9rem; }
+        
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+        
+        .tab:hover { 
+            background: var(--bg-elevated); 
+            border-color: var(--accent-orange);
+        }
+        
+        .tab.active { 
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+            color: white;
+            border-color: transparent;
+        }
+        
+        /* Week Navigation */
+        .week-nav {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            border: 1px solid var(--border);
+        }
+        
+        .nav-btn {
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .nav-btn:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(217, 119, 87, 0.3);
+        }
+        
+        .week-range {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        /* Sections */
+        .win-section, .log-section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .win-input, .log-input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+        }
+        
+        .win-input:focus, .log-input:focus {
+            outline: none;
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.1);
+        }
+        
+        .log-input { margin-bottom: 0.75rem; }
+        
+        .log-response {
+            padding: 1rem;
+            background: rgba(127, 176, 105, 0.1);
+            border-left: 4px solid var(--success);
+            border-radius: 8px;
+            color: var(--success);
+            font-weight: 500;
+        }
+        
+        /* Grid Table */
+        .habit-section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+        
+        .grid-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            user-select: none;
+        }
+        
+        .grid-table th {
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+            color: white;
+            padding: 0.75rem 0.5rem;
+            text-align: center;
+            font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .grid-table th.habit-col {
+            text-align: left;
+            min-width: 180px;
+        }
+        
+        .grid-table th.freq-col { min-width: 60px; }
+        
+        .grid-table th.week-header {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            font-size: 0.9rem;
+        }
+        
+        .day-header {
+            text-align: center;
+        }
+        
+        .day-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+        
+        .day-date {
+            font-size: 0.7rem;
+            opacity: 0.9;
+        }
+        
+        .grid-table td {
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            text-align: center;
+            background: var(--bg-elevated);
+        }
+        
+        .grid-table td.habit-name-cell {
+            text-align: left;
+            padding: 0.75rem;
+        }
+        
+        .habit-name-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 0.3rem;
+            color: var(--text-primary);
+        }
+        
+        .habit-name-input:focus {
+            outline: 1px solid var(--accent-orange);
+            background: var(--bg-card);
+            border-radius: 4px;
+        }
+        
+        .freq-input {
+            width: 50px;
+            text-align: center;
+            border: 1px solid var(--border);
+            padding: 0.3rem;
+            font-weight: 700;
+            border-radius: 4px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+        
+        .freq-input:focus { outline: 1px solid var(--accent-orange); }
+        
+        .grid-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        
+        .grid-checkbox:hover {
+            border-color: var(--accent-orange);
+            transform: scale(1.05);
+        }
+        
+        .grid-checkbox.checked {
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+            border-color: var(--accent-orange);
+        }
+        
+        .grid-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        /* Progress Bar */
+        .progress-cell {
+            padding: 0.5rem;
+        }
+        
+        .progress-bar-mini {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.3rem;
+        }
+        
+        .progress-fill-mini {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-orange), var(--accent-coral));
+            transition: width 0.3s;
+        }
+        
+        .progress-text-mini {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+        
+        /* Day Stats */
+        .day-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            align-items: center;
+            font-size: 0.7rem;
+            padding: 0.5rem 0.3rem;
+        }
+        
+        .stat-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .stat-value {
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: var(--accent-orange);
+        }
+        
+        .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        
+        /* Add Habit */
+        .add-habit-row {
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        .add-habit-btn {
+            padding: 0.75rem 1.5rem;
+            background: rgba(217, 119, 87, 0.1);
+            color: var(--accent-orange);
+            border: 2px dashed var(--accent-orange);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        
+        .add-habit-btn:hover {
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+            color: white;
+            border-style: solid;
+        }
+        
+        /* Dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+        
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        /* Tasks */
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.75rem;
+        }
+        
+        .task-day {
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid var(--border);
+        }
+        
+        .task-day-header {
+            text-align: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--accent-orange);
+        }
+        
+        .task-day-name {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .task-day-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .task-progress {
+            width: 60px;
+            height: 60px;
+            margin: 0.5rem auto;
+            border-radius: 50%;
+            border: 4px solid var(--accent-orange);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--accent-orange);
+        }
+        
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        
+        .task-item {
+            display: flex;
+            gap: 0.4rem;
+            align-items: center;
+        }
+        
+        .task-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .task-checkbox:hover {
+            border-color: var(--accent-orange);
+        }
+        
+        .task-checkbox.checked {
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+            border-color: var(--accent-orange);
+        }
+        
+        .task-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        
+        .task-input {
+            flex: 1;
+            padding: 0.3rem 0.5rem;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--text-primary);
+        }
+        
+        .task-input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .task-input:focus { 
+            outline: none;
+            border-color: var(--accent-orange);
+        }
+        
+        .task-input.empty {
+            opacity: 0.3;
+        }
+        
+        /* Meals */
+        .meals-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .meal-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+        
+        .meal-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--accent-orange);
+        }
+        
+        .meal-template {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        .meals-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .form-input {
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+        
+        .form-input:focus { 
+            outline: none;
+            border-color: var(--accent-orange);
+        }
+        
+        /* AI Chatbot - Transparent Blurred */
+        .chatbot {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(217, 119, 87, 0.3);
+            box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .chatbot.collapsed { height: 60px; }
+        .chatbot.expanded { height: 500px; }
+        
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            background: rgba(217, 119, 87, 0.1);
+        }
+        
+        .chat-title {
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .chat-toggle {
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        
+        .chat-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(217, 119, 87, 0.4);
+        }
+        
+        .chat-messages {
+            height: 320px;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .chat-message {
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            max-width: 70%;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .chat-message.user {
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+            color: white;
+            align-self: flex-end;
+        }
+        
+        .chat-message.ai {
+            background: rgba(45, 45, 45, 0.9);
+            color: var(--text-primary);
+            align-self: flex-start;
+            border: 1px solid var(--border);
+        }
+        
+        .chat-input-area {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid rgba(217, 119, 87, 0.2);
+            background: rgba(30, 30, 30, 0.5);
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: rgba(45, 45, 45, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+        }
+        
+        .chat-input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .chat-input:focus { 
+            outline: none;
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.1);
+        }
+        
+        .chat-send {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .chat-send:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(217, 119, 87, 0.3);
+        }
+        
+        @media (max-width: 1400px) {
+            .tasks-grid { grid-template-columns: repeat(4, 1fr); }
+            .meals-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        @media (max-width: 1000px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .tasks-grid { grid-template-columns: repeat(2, 1fr); }
+            .meals-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        
+        function App() {
+            const [activeTab, setActiveTab] = useState('habits');
+            const [startDate, setStartDate] = useState(() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return today;
+            });
+            const [chatExpanded, setChatExpanded] = useState(false);
+            const [chatMessages, setChatMessages] = useState([
+                { role: 'ai', text: 'Hi! I\'m your AI assistant with full control. I can modify your habits, tasks, meals, and anything else. Just ask!' }
+            ]);
+            const [chatInput, setChatInput] = useState('');
+            const [isDragging, setIsDragging] = useState(false);
+            const [dragStart, setDragStart] = useState(null);
+            const [todayWin, setTodayWin] = useState('');
+            const [logInput, setLogInput] = useState('');
+            const [logResponse, setLogResponse] = useState('');
+            
+            const [habits, setHabits] = useState(() => {
+                const saved = localStorage.getItem('habits');
+                return saved ? JSON.parse(saved) : [
+                    { id: 1, name: 'Wake up at 07:00 ⏰', frequency: 7 },
+                    { id: 2, name: 'Day Planning 🗓️', frequency: 7 },
+                    { id: 3, name: 'Gym 💪', frequency: 5 },
+                    { id: 4, name: 'Budget Tracking 💰', frequency: 7 },
+                    { id: 5, name: 'Project Work 🎯', frequency: 5 },
+                    { id: 6, name: 'No Alcohol 🍾', frequency: 7 },
+                    { id: 7, name: 'No Vaping 🚭', frequency: 7 },
+                    { id: 8, name: 'Social Media Detox 🌿', frequency: 7 },
+                    { id: 9, name: 'Cold Shower 🚿', frequency: 7 },
+                    { id: 10, name: 'Clean Up 🧼', frequency: 7 },
+                    { id: 11, name: 'Laundry 👕', frequency: 2 },
+                    { id: 12, name: 'Meal Prep 🥗', frequency: 2 },
+                    { id: 13, name: 'Drink 42 oz of Water 💧', frequency: 7 },
+                    { id: 14, name: "Today's Win Set 🏆", frequency: 7 }
+                ];
+            });
+            
+            const [gridData, setGridData] = useState(() => {
+                const saved = localStorage.getItem('gridData');
+                if (saved) return JSON.parse(saved);
+                const data = {};
+                habits.forEach(h => { data[h.id] = {}; });
+                return data;
+            });
+            
+            const [tasks, setTasks] = useState(() => {
+                const saved = localStorage.getItem('tasks');
+                if (saved) return JSON.parse(saved);
+                const data = {};
+                for (let i = 0; i < 7; i++) {
+                    data[i] = Array(12).fill(null).map(() => ({ text: '', done: false }));
+                }
+                return data;
+            });
+            
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
+            
+            useEffect(() => { localStorage.setItem('habits', JSON.stringify(habits)); }, [habits]);
+            useEffect(() => { localStorage.setItem('gridData', JSON.stringify(gridData)); }, [gridData]);
+            useEffect(() => { localStorage.setItem('tasks', JSON.stringify(tasks)); }, [tasks]);
+            
+            function getTwoWeeks() {
+                const days = [];
+                for (let i = 0; i < 14; i++) {
+                    const date = new Date(startDate);
+                    date.setDate(startDate.getDate() + i);
+                    days.push(date);
+                }
+                return days;
+            }
+            
+            function formatDate(date) {
+                return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            }
+            
+            function getDayName(date) {
+                const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                return days[date.getDay()];
+            }
+            
+            function toggleCheckbox(habitId, dateStr) {
+                setGridData(prev => ({
+                    ...prev,
+                    [habitId]: {
+                        ...prev[habitId],
+                        [dateStr]: !prev[habitId]?.[dateStr]
+                    }
+                }));
+            }
+            
+            function handleMouseDown(habitId, dateStr) {
+                setIsDragging(true);
+                setDragStart({ habitId, dateStr });
+                toggleCheckbox(habitId, dateStr);
+            }
+            
+            function handleMouseEnter(habitId, dateStr) {
+                if (isDragging) {
+                    toggleCheckbox(habitId, dateStr);
+                }
+            }
+            
+            function handleMouseUp() {
+                setIsDragging(false);
+                setDragStart(null);
+            }
+            
+            useEffect(() => {
+                document.addEventListener('mouseup', handleMouseUp);
+                return () => document.removeEventListener('mouseup', handleMouseUp);
+            }, []);
+            
+            function getDayStats(dateStr) {
+                let done = 0;
+                let notDone = 0;
+                habits.forEach(habit => {
+                    if (gridData[habit.id]?.[dateStr]) done++;
+                    else notDone++;
+                });
+                const progress = habits.length > 0 ? Math.round((done / habits.length) * 100) : 0;
+                
+                const date = new Date(dateStr);
+                let dayStreak = 0;
+                for (let i = 0; i <= 30; i++) {
+                    const checkDate = new Date(date);
+                    checkDate.setDate(date.getDate() - i);
+                    const checkDateStr = formatDate(checkDate);
+                    
+                    let allComplete = true;
+                    habits.forEach(habit => {
+                        if (!gridData[habit.id]?.[checkDateStr]) allComplete = false;
+                    });
+                    
+                    if (allComplete && done > 0) dayStreak++;
+                    else break;
+                }
+                
+                return { progress, done, notDone, streak: dayStreak };
+            }
+            
+            function getHabitProgressForTwoWeeks(habitId) {
+                const twoWeeks = getTwoWeeks();
+                let completed = 0;
+                twoWeeks.forEach(date => {
+                    if (gridData[habitId]?.[formatDate(date)]) completed++;
+                });
+                return Math.round((completed / 14) * 100);
+            }
+            
+            function navigateWeeks(direction) {
+                const newDate = new Date(startDate);
+                newDate.setDate(startDate.getDate() + (direction * 2));
+                setStartDate(newDate);
+            }
+            
+            function addHabit() {
+                const newId = Math.max(...habits.map(h => h.id), 0) + 1;
+                setHabits([...habits, { id: newId, name: 'New Habit', frequency: 7 }]);
+                setGridData(prev => ({ ...prev, [newId]: {} }));
+            }
+            
+            function deleteHabit(id) {
+                setHabits(habits.filter(h => h.id !== id));
+                const newData = { ...gridData };
+                delete newData[id];
+                setGridData(newData);
+            }
+            
+            function updateHabit(id, field, value) {
+                setHabits(habits.map(h => h.id === id ? { ...h, [field]: value } : h));
+            }
+            
+            function updateTask(dayIndex, taskIndex, field, value) {
+                setTasks(prev => {
+                    const newTasks = { ...prev };
+                    newTasks[dayIndex] = [...newTasks[dayIndex]];
+                    newTasks[dayIndex][taskIndex] = { ...newTasks[dayIndex][taskIndex], [field]: value };
+                    return newTasks;
+                });
+            }
+            
+            function getTaskCompletionPercent(dayIndex) {
+                const filledTasks = tasks[dayIndex].filter(t => t.text.trim() !== '');
+                if (filledTasks.length === 0) return 0;
+                const completed = filledTasks.filter(t => t.done).length;
+                return Math.round((completed / filledTasks.length) * 100);
+            }
+            
+            function handleLog() {
+                if (!logInput.trim()) return;
+                
+                const input = logInput.toLowerCase();
+                let response = '';
+                
+                if (input.match(/did|finished|completed.*\d+.*min/)) {
+                    const minutes = input.match(/\d+/)?.[0] || '0';
+                    response = `✓ Logged ${minutes} min of focused work! Great job staying productive.`;
+                } else if (input.includes('ate') || input.includes('breakfast') || input.includes('lunch')) {
+                    response = `✓ Meal logged! Remember: protein + veggies = sustained energy.`;
+                } else if (input.includes('brain fog') || input.includes('tired')) {
+                    response = `Quick energy boost: 10min walk + water + protein snack. You've got this!`;
+                } else {
+                    response = `✓ Logged! Keep tracking your habits and meals for best results.`;
+                }
+                
+                setLogResponse(response);
+                setLogInput('');
+                setTimeout(() => setLogResponse(''), 8000);
+            }
+            
+            function sendMessage() {
+                if (!chatInput.trim()) return;
+                
+                setChatMessages([...chatMessages, { role: 'user', text: chatInput }]);
+                const userInput = chatInput.toLowerCase();
+                
+                setTimeout(() => {
+                    let response = '';
+                    let action = null;
+                    
+                    // AI can modify habits
+                    if (userInput.includes('add habit') || userInput.includes('create habit')) {
+                        const habitName = chatInput.match(/["'](.+?)["']|add habit (.+)|create habit (.+)/i);
+                        if (habitName) {
+                            const name = habitName[1] || habitName[2] || habitName[3] || 'New Habit';
+                            const newId = Math.max(...habits.map(h => h.id), 0) + 1;
+                            setHabits([...habits, { id: newId, name: name.trim(), frequency: 7 }]);
+                            setGridData(prev => ({ ...prev, [newId]: {} }));
+                            response = `✅ Added habit: "${name.trim()}" with 7x/week frequency!`;
+                        } else {
+                            addHabit();
+                            response = '✅ Added a new habit! Edit the name in the table above.';
+                        }
+                    }
+                    // AI can set win
+                    else if (userInput.includes('set win') || userInput.includes('today\'s win')) {
+                        const winText = chatInput.match(/["'](.+?)["']|set win to (.+)|today'?s win (.+)/i);
+                        if (winText) {
+                            const win = winText[1] || winText[2] || winText[3];
+                            setTodayWin(win.trim());
+                            response = `🎯 Set today's win to: "${win.trim()}"`;
+                        } else {
+                            response = 'Tell me your win! Example: "Set win to finish project proposal"';
+                        }
+                    }
+                    // AI can add tasks
+                    else if (userInput.includes('add task') || userInput.includes('create task')) {
+                        const taskMatch = chatInput.match(/add task ["'](.+?)["']|create task ["'](.+?)["']/i);
+                        if (taskMatch) {
+                            const taskText = taskMatch[1] || taskMatch[2];
+                            // Add to today
+                            const today = new Date().getDay();
+                            const dayTasks = [...tasks[today]];
+                            const emptyIdx = dayTasks.findIndex(t => !t.text);
+                            if (emptyIdx !== -1) {
+                                dayTasks[emptyIdx] = { text: taskText.trim(), done: false };
+                                setTasks(prev => ({ ...prev, [today]: dayTasks }));
+                                response = `✅ Added task for today: "${taskText.trim()}"`;
+                            } else {
+                                response = '⚠️ Today\'s task list is full (12 tasks max)';
+                            }
+                        } else {
+                            response = 'Tell me the task! Example: "Add task \'Call dentist\'"';
+                        }
+                    }
+                    // Meal suggestions
+                    else if (userInput.includes('meal') || userInput.includes('food')) {
+                        response = 'For brain performance:\n• Breakfast: Protein + healthy fats\n• Lunch: Lean protein + veggies + smart carbs\n• Snacks: Nuts, fruits\n• Dinner: Lighter meal 3hrs before bed\n\nAvoid heavy carbs at lunch!';
+                    }
+                    // Task scheduling
+                    else if (userInput.includes('schedule') || userInput.includes('plan week')) {
+                        response = 'I can help plan your week! Try:\n• "Add task \'Meeting at 2pm\' for Monday"\n• "Set win to complete proposal"\n• "Add habit \'Evening walk\'"\n\nWhat would you like to schedule?';
+                    }
+                    // Habit advice
+                    else if (userInput.includes('habit') || userInput.includes('streak')) {
+                        response = 'Build habits:\n• Start small (2-min version)\n• Stack habits\n• Track daily (you are!)\n• Never miss twice\n• Celebrate wins\n\nNeed me to add a specific habit?';
+                    }
+                    // Default
+                    else {
+                        response = 'I have full control! I can:\n• Add/modify habits\n• Set your win\n• Add tasks to any day\n• Give meal advice\n• Plan your week\n\nTry: "Add habit \'Meditate\'" or "Set win to finish report"';
+                    }
+                    
+                    setChatMessages(prev => [...prev, { role: 'ai', text: response }]);
+                }, 500);
+                
+                setChatInput('');
+            }
+            
+            const twoWeeks = getTwoWeeks();
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            
+            useEffect(() => {
+                if (activeTab === 'habits' && chartRef.current) {
+                    if (chartInstance.current) chartInstance.current.destroy();
+                    
+                    const ctx = chartRef.current.getContext('2d');
+                    let totalDone = 0;
+                    let totalNotDone = 0;
+                    
+                    twoWeeks.forEach(date => {
+                        const stats = getDayStats(formatDate(date));
+                        totalDone += stats.done;
+                        totalNotDone += stats.notDone;
+                    });
+                    
+                    chartInstance.current = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Done', 'Not Done'],
+                            datasets: [{
+                                data: [totalDone, totalNotDone],
+                                backgroundColor: ['#d97757', '#3a3a3a'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { 
+                                legend: { 
+                                    position: 'bottom',
+                                    labels: { color: '#e8e8e8' }
+                                } 
+                            }
+                        }
+                    });
+                }
+            }, [activeTab, gridData, startDate]);
+            
+            return (
+                <div className="app">
+                    <div className="header">
+                        <div className="logo">Productivity Tracker</div>
+                        <div className="quote">"Tiny Changes, Remarkable Results" - James Clear</div>
+                    </div>
+                    
+                    <div className="tabs">
+                        <button className={`tab ${activeTab === 'habits' ? 'active' : ''}`} onClick={() => setActiveTab('habits')}>
+                            📊 Habit Tracker
+                        </button>
+                        <button className={`tab ${activeTab === 'tasks' ? 'active' : ''}`} onClick={() => setActiveTab('tasks')}>
+                            ✅ Task Tracker
+                        </button>
+                        <button className={`tab ${activeTab === 'meals' ? 'active' : ''}`} onClick={() => setActiveTab('meals')}>
+                            🍽️ Meals & Settings
+                        </button>
+                    </div>
+                    
+                    {activeTab === 'habits' && (
+                        <>
+                            <div className="win-section">
+                                <div className="section-title">🎯 Today's Win</div>
+                                <input
+                                    type="text"
+                                    className="win-input"
+                                    placeholder="If I only do ONE thing today, it's..."
+                                    value={todayWin}
+                                    onChange={(e) => setTodayWin(e.target.value)}
+                                />
+                            </div>
+                            
+                            <div className="log-section">
+                                <div className="section-title">📝 Quick Log</div>
+                                <input
+                                    type="text"
+                                    className="log-input"
+                                    placeholder='Type: "did 45min deep work" or "ate breakfast" or "brain fog"'
+                                    value={logInput}
+                                    onChange={(e) => setLogInput(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleLog()}
+                                />
+                                {logResponse && (
+                                    <div className="log-response">{logResponse}</div>
+                                )}
+                            </div>
+                            
+                            <div className="week-nav">
+                                <button className="nav-btn" onClick={() => navigateWeeks(-1)}>
+                                    ← 2 Days Back
+                                </button>
+                                <div className="week-range">
+                                    {twoWeeks[0].toLocaleDateString()} - {twoWeeks[13].toLocaleDateString()}
+                                </div>
+                                <button className="nav-btn" onClick={() => navigateWeeks(1)}>
+                                    2 Days Forward →
+                                </button>
+                            </div>
+                            
+                            <div className="habit-section">
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table className="grid-table">
+                                        <thead>
+                                            <tr>
+                                                <th className="habit-col">Habit</th>
+                                                <th className="freq-col">x/week</th>
+                                                <th className="week-header" colSpan={7}>Week 1</th>
+                                                <th className="week-header" colSpan={7}>Week 2</th>
+                                                <th>Progress</th>
+                                                <th style={{ width: '40px' }}>Del</th>
+                                            </tr>
+                                            <tr>
+                                                <th className="habit-col"></th>
+                                                <th className="freq-col"></th>
+                                                {twoWeeks.map((date, idx) => (
+                                                    <th key={idx}>
+                                                        <div className="day-header">
+                                                            <div className="day-name">{getDayName(date)}</div>
+                                                            <div className="day-date">{date.getMonth() + 1}/{date.getDate()}</div>
+                                                        </div>
+                                                    </th>
+                                                ))}
+                                                <th></th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {habits.map(habit => (
+                                                <tr key={habit.id}>
+                                                    <td className="habit-name-cell">
+                                                        <input
+                                                            type="text"
+                                                            className="habit-name-input"
+                                                            value={habit.name}
+                                                            onChange={(e) => updateHabit(habit.id, 'name', e.target.value)}
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <input
+                                                            type="number"
+                                                            className="freq-input"
+                                                            min="1"
+                                                            max="7"
+                                                            value={habit.frequency}
+                                                            onChange={(e) => updateHabit(habit.id, 'frequency', parseInt(e.target.value) || 7)}
+                                                        />
+                                                    </td>
+                                                    {twoWeeks.map((date, idx) => {
+                                                        const dateStr = formatDate(date);
+                                                        const checked = gridData[habit.id]?.[dateStr] || false;
+                                                        return (
+                                                            <td key={idx}>
+                                                                <div
+                                                                    className={`grid-checkbox ${checked ? 'checked' : ''}`}
+                                                                    onMouseDown={() => handleMouseDown(habit.id, dateStr)}
+                                                                    onMouseEnter={() => handleMouseEnter(habit.id, dateStr)}
+                                                                />
+                                                            </td>
+                                                        );
+                                                    })}
+                                                    <td className="progress-cell">
+                                                        <div className="progress-bar-mini">
+                                                            <div 
+                                                                className="progress-fill-mini"
+                                                                style={{ width: `${getHabitProgressForTwoWeeks(habit.id)}%` }}
+                                                            />
+                                                        </div>
+                                                        <div className="progress-text-mini">{getHabitProgressForTwoWeeks(habit.id)}%</div>
+                                                    </td>
+                                                    <td>
+                                                        <button
+                                                            onClick={() => deleteHabit(habit.id)}
+                                                            style={{
+                                                                border: 'none',
+                                                                background: 'transparent',
+                                                                cursor: 'pointer',
+                                                                fontSize: '1.2rem',
+                                                                color: 'var(--text-muted)'
+                                                            }}
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            <tr>
+                                                <td colSpan={2} className="add-habit-row">
+                                                    <button className="add-habit-btn" onClick={addHabit}>
+                                                        + Add Habit
+                                                    </button>
+                                                </td>
+                                                {twoWeeks.map((date, idx) => {
+                                                    const dateStr = formatDate(date);
+                                                    const stats = getDayStats(dateStr);
+                                                    return (
+                                                        <td key={idx}>
+                                                            <div className="day-stats">
+                                                                <div className="stat-row">
+                                                                    <div className="stat-item">
+                                                                        <div className="stat-value">{stats.progress}%</div>
+                                                                        <div className="stat-label">Progress</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="stat-row">
+                                                                    <div className="stat-item">
+                                                                        <div className="stat-value">{stats.done}</div>
+                                                                        <div className="stat-label">Done</div>
+                                                                    </div>
+                                                                    <div className="stat-item">
+                                                                        <div className="stat-value">{stats.notDone}</div>
+                                                                        <div className="stat-label">Not</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="stat-item">
+                                                                    <div className="stat-value">🔥 {stats.streak}</div>
+                                                                    <div className="stat-label">Streak</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    );
+                                                })}
+                                                <td colSpan={2}></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div className="dashboard-grid">
+                                <div className="card">
+                                    <div className="card-title">📈 Statistics (2 Weeks)</div>
+                                    <div className="chart-container">
+                                        <canvas ref={chartRef}></canvas>
+                                    </div>
+                                </div>
+                                
+                                <div className="card">
+                                    <div className="card-title">💡 Quick Tips</div>
+                                    <div style={{ lineHeight: '1.8', color: 'var(--text-secondary)' }}>
+                                        <p><strong style={{ color: 'var(--accent-orange)' }}>🎯 Pro Tip:</strong> Drag across checkboxes to select multiple!</p>
+                                        <p style={{ marginTop: '1rem' }}><strong style={{ color: 'var(--accent-orange)' }}>🔥 Streak:</strong> Never miss two days in a row!</p>
+                                        <p style={{ marginTop: '1rem' }}><strong style={{ color: 'var(--accent-orange)' }}>📊 Progress:</strong> Based on the 2 weeks currently shown</p>
+                                        <p style={{ marginTop: '1rem' }}><strong style={{ color: 'var(--accent-orange)' }}>🤖 AI Control:</strong> Ask the AI to modify anything!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                    
+                    {activeTab === 'tasks' && (
+                        <div className="card">
+                            <div className="card-title">📅 Weekly Task Planner</div>
+                            <div className="tasks-grid">
+                                {[0,1,2,3,4,5,6].map(dayIdx => {
+                                    const date = new Date();
+                                    date.setDate(date.getDate() - date.getDay() + dayIdx);
+                                    const percent = getTaskCompletionPercent(dayIdx);
+                                    const filledCount = tasks[dayIdx].filter(t => t.text.trim()).length;
+                                    
+                                    return (
+                                        <div key={dayIdx} className="task-day">
+                                            <div className="task-day-header">
+                                                <div className="task-day-name">{dayNames[date.getDay()]}</div>
+                                                <div className="task-day-date">{date.toLocaleDateString()}</div>
+                                            </div>
+                                            <div className="task-progress">{percent}%</div>
+                                            <div className="task-list">
+                                                {tasks[dayIdx].map((task, taskIdx) => (
+                                                    <div key={taskIdx} className="task-item">
+                                                        <div
+                                                            className={`task-checkbox ${task.done ? 'checked' : ''}`}
+                                                            onClick={() => updateTask(dayIdx, taskIdx, 'done', !task.done)}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            className={`task-input ${!task.text ? 'empty' : ''}`}
+                                                            placeholder=""
+                                                            value={task.text}
+                                                            onChange={(e) => updateTask(dayIdx, taskIdx, 'text', e.target.value)}
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div style={{ marginTop: '0.75rem', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                                {filledCount} task{filledCount !== 1 ? 's' : ''} added
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {activeTab === 'meals' && (
+                        <>
+                            <div className="card" style={{ marginBottom: '1rem' }}>
+                                <div className="card-title">⚙️ Meal Settings</div>
+                                <div className="meals-form">
+                                    <div className="form-group">
+                                        <label className="form-label">Weight (lbs)</label>
+                                        <input type="text" className="form-input" placeholder="150" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Height (inches)</label>
+                                        <input type="text" className="form-input" placeholder="70" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Age</label>
+                                        <input type="text" className="form-input" placeholder="30" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Food Dislikes</label>
+                                        <input type="text" className="form-input" placeholder="tomatoes, olives" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Dietary Restrictions</label>
+                                        <input type="text" className="form-input" placeholder="dairy-free, gluten-free" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Max Meal Time (min)</label>
+                                        <input type="text" className="form-input" placeholder="20" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <input type="checkbox" />
+                                            <span className="form-label">Budget Mode (Aldi)</span>
+                                        </label>
+                                    </div>
+                                    <div className="form-group">
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <input type="checkbox" />
+                                            <span className="form-label">Same Breakfast Daily</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="card">
+                                <div className="card-title">🍽️ Brain-Powered Meal Templates</div>
+                                <div className="meals-grid">
+                                    <div className="meal-card">
+                                        <div className="meal-title">☀️ Breakfast (Focus Start)</div>
+                                        <div className="meal-template">
+                                            <strong>Formula:</strong> Protein + Fiber + Fat<br/>
+                                            <strong>Goal:</strong> Stable energy all morning<br/>
+                                            <br/>
+                                            <strong>Examples:</strong><br/>
+                                            • Greek yogurt + berries + walnuts<br/>
+                                            • Eggs + avocado toast<br/>
+                                            • Oatmeal + protein + banana
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="meal-card">
+                                        <div className="meal-title">🌤️ Lunch (No-Crash)</div>
+                                        <div className="meal-template">
+                                            <strong>Formula:</strong> Protein + Veg + Smart Carb<br/>
+                                            <strong>Goal:</strong> No afternoon slump<br/>
+                                            <br/>
+                                            <strong>Examples:</strong><br/>
+                                            • Salmon bowl + quinoa + broccoli<br/>
+                                            • Turkey sandwich + side salad<br/>
+                                            • Chicken stir-fry + brown rice
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="meal-card">
+                                        <div className="meal-title">⚡ Snack (Rescue)</div>
+                                        <div className="meal-template">
+                                            <strong>Formula:</strong> Quick energy boost<br/>
+                                            <strong>Goal:</strong> Avoid derailment<br/>
+                                            <br/>
+                                            <strong>Examples:</strong><br/>
+                                            • Apple + peanut butter<br/>
+                                            • Almonds + dark chocolate<br/>
+                                            • Trail mix<br/>
+                                            • Protein bar
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="meal-card">
+                                        <div className="meal-title">🌙 Dinner (Recovery)</div>
+                                        <div className="meal-template">
+                                            <strong>Formula:</strong> Protein + Veg + Carbs<br/>
+                                            <strong>Goal:</strong> Sleep support<br/>
+                                            <br/>
+                                            <strong>Examples:</strong><br/>
+                                            • Salmon + sweet potato + asparagus<br/>
+                                            • Chicken + rice + vegetables<br/>
+                                            • Pasta + lean meat + salad
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                    
+                    {/* AI Chatbot - Transparent Blurred with Full Control */}
+                    <div className={`chatbot ${chatExpanded ? 'expanded' : 'collapsed'}`}>
+                        <div className="chat-header" onClick={() => setChatExpanded(!chatExpanded)}>
+                            <div className="chat-title">🤖 AI Assistant (Full Control)</div>
+                            <div className="chat-toggle">{chatExpanded ? '−' : '+'}</div>
+                        </div>
+                        
+                        {chatExpanded && (
+                            <>
+                                <div className="chat-messages">
+                                    {chatMessages.map((msg, idx) => (
+                                        <div key={idx} className={`chat-message ${msg.role}`}>
+                                            {msg.text}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="chat-input-area">
+                                    <input
+                                        type="text"
+                                        className="chat-input"
+                                        placeholder='Try: "Add habit Meditate" or "Set win to finish report"'
+                                        value={chatInput}
+                                        onChange={(e) => setChatInput(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                                    />
+                                    <button className="chat-send" onClick={sendMessage}>Send</button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
