@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity Tracker - Google Sheets Powered</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0f172a;
+            --bg-darker: #020617;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --accent-primary: #06b6d4;
+            --accent-secondary: #8b5cf6;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #334155;
+            --glow-cyan: rgba(6, 182, 212, 0.4);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(6, 182, 212, 0.06) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        #root {
+            position: relative;
+            z-index: 1;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: var(--bg-darker);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.03em;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .stat-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .config-notice {
+            background: var(--accent-warning);
+            color: var(--bg-dark);
+            padding: 0.75rem 1.5rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .config-notice a {
+            color: var(--bg-dark);
+            text-decoration: underline;
+            margin-left: 0.5rem;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem 2rem 120px 2rem;
+        }
+
+        .main-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .main-content::-webkit-scrollbar-track {
+            background: var(--bg-darker);
+        }
+
+        .main-content::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .score-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .score-card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .score-card-icon {
+            font-size: 2rem;
+        }
+
+        .progress-ring-container {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            margin: 0.5rem 0;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 8;
+        }
+
+        .progress-ring-circle {
+            fill: none;
+            stroke: url(#gradient);
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.8s ease;
+        }
+
+        .progress-ring-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .score-card-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .habits-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .habits-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .habits-table th {
+            background: var(--bg-darker);
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border: 1px solid var(--border);
+        }
+
+        .habits-table th:first-child {
+            text-align: left;
+        }
+
+        .habits-table td {
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .habits-table tbody tr:hover td {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .habit-name {
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .habit-category {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.3rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .category-work { background: rgba(249, 115, 22, 0.2); color: #f97316; }
+        .category-focus { background: rgba(6, 182, 212, 0.2); color: #06b6d4; }
+        .category-health { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .category-sleep { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
+        .category-nutrition { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .category-home { background: rgba(100, 116, 139, 0.2); color: #64748b; }
+
+        .check-cell {
+            text-align: center;
+        }
+
+        .checkbox {
+            width: 28px;
+            height: 28px;
+            border: 2px solid var(--border);
+            border-radius: 0.4rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: transparent;
+        }
+
+        .checkbox:hover {
+            border-color: var(--accent-primary);
+            transform: scale(1.1);
+        }
+
+        .checkbox.checked {
+            background: linear-gradient(135deg, var(--accent-success), var(--accent-primary));
+            border-color: var(--accent-success);
+            animation: checkPop 0.3s ease;
+        }
+
+        @keyframes checkPop {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .week-progress {
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .streak-count {
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--accent-warning);
+        }
+
+        .chat-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-darker);
+            border-top: 1px solid var(--border);
+            padding: 0.75rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 1000;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .chat-bar.expanded {
+            height: 400px;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .chat-toggle {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .chat-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px var(--glow-cyan);
+        }
+
+        .chat-input-wrapper {
+            flex: 1;
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+        }
+
+        .chat-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .chat-send {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .chat-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--glow-cyan);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: var(--bg-card);
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .chat-message {
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            max-width: 80%;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-message.user {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            align-self: flex-end;
+            color: white;
+        }
+
+        .chat-message.ai {
+            background: var(--bg-card);
+            align-self: flex-start;
+            border: 1px solid var(--border);
+        }
+
+        .chat-message-time {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            margin-top: 0.3rem;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 0.5rem;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--accent-danger);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            color: var(--accent-danger);
+        }
+
+        @media (max-width: 1400px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-bar {
+                padding: 0.5rem 1rem;
+            }
+
+            .main-content {
+                padding: 1rem 1rem 120px 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // ===== CONFIGURATION =====
+        // Your Google Apps Script Web App URL
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyz5FGJW5trBOU-4NhSyvXESw-itxZjoWX1x-3HGoEPnE0CoDi2tIJ5O1LUMA_YSr6-/exec';
+
+        // ===== API FUNCTIONS =====
+        async function callAPI(action, data = {}) {
+            try {
+                console.log('API Call:', action, data);
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain' // This helps avoid CORS preflight
+                    },
+                    body: JSON.stringify({ action, ...data })
+                });
+                
+                const result = await response.json();
+                console.log('API Response:', result);
+                
+                if (!result.success) {
+                    throw new Error(result.error || 'API call failed');
+                }
+                return result.data;
+            } catch (error) {
+                console.error('API Error Details:', {
+                    action,
+                    error: error.message,
+                    url: API_URL
+                });
+                throw error;
+            }
+        }
+
+        // ===== PROGRESS RING COMPONENT =====
+        function ProgressRing({ percentage, size = 100, strokeWidth = 8 }) {
+            const radius = (size - strokeWidth) / 2;
+            const circumference = radius * 2 * Math.PI;
+            const offset = circumference - (percentage / 100) * circumference;
+
+            return (
+                <div className="progress-ring-container" style={{ width: size, height: size }}>
+                    <svg className="progress-ring" width={size} height={size}>
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#06b6d4" />
+                                <stop offset="100%" stopColor="#8b5cf6" />
+                            </linearGradient>
+                        </defs>
+                        <circle
+                            className="progress-ring-circle-bg"
+                            cx={size / 2}
+                            cy={size / 2}
+                            r={radius}
+                        />
+                        <circle
+                            className="progress-ring-circle"
+                            cx={size / 2}
+                            cy={size / 2}
+                            r={radius}
+                            strokeDasharray={circumference}
+                            strokeDashoffset={offset}
+                        />
+                    </svg>
+                    <div className="progress-ring-text">{percentage}%</div>
+                </div>
+            );
+        }
+
+        // ===== MAIN APP =====
+        function App() {
+            const [configured, setConfigured] = useState(API_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE');
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+            
+            const [habits, setHabits] = useState([]);
+            const [stats, setStats] = useState(null);
+            const [chatExpanded, setChatExpanded] = useState(false);
+            const [chatMessages, setChatMessages] = useState([]);
+            const [inputValue, setInputValue] = useState('');
+            const [isTyping, setIsTyping] = useState(false);
+
+            // Load data on mount
+            useEffect(() => {
+                if (configured) {
+                    loadData();
+                }
+            }, [configured]);
+
+            async function loadData() {
+                setLoading(true);
+                setError(null);
+                try {
+                    console.log('Attempting to load data from:', API_URL);
+                    const [habitsData, statsData] = await Promise.all([
+                        callAPI('getHabits'),
+                        callAPI('getStats')
+                    ]);
+                    console.log('Data loaded successfully:', { habitsData, statsData });
+                    setHabits(habitsData);
+                    setStats(statsData);
+                    setLoading(false);
+                } catch (err) {
+                    console.error('Load data error:', err);
+                    setError(`Failed to load data: ${err.message}. Check: (1) Apps Script deployed with "Anyone" access, (2) API URL is correct, (3) Browser console (F12) for details.`);
+                    setLoading(false);
+                }
+            }
+
+            async function toggleHabit(habitId, dayIndex, currentlyChecked) {
+                try {
+                    await callAPI('updateHabit', {
+                        habitId,
+                        dayIndex,
+                        checked: !currentlyChecked
+                    });
+                    // Reload data to get updated stats
+                    loadData();
+                } catch (err) {
+                    console.error('Failed to update habit:', err);
+                }
+            }
+
+            async function handleSendMessage() {
+                if (!inputValue.trim()) return;
+
+                const userMessage = {
+                    type: 'user',
+                    text: inputValue,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+
+                setChatMessages(prev => [...prev, userMessage]);
+                const currentInput = inputValue;
+                setInputValue('');
+                setIsTyping(true);
+
+                try {
+                    // Log to chat history
+                    await callAPI('logChat', { message: userMessage });
+
+                    // Check if it's a command
+                    const commandResult = await callAPI('processAICommand', { command: currentInput });
+
+                    let aiResponse;
+                    if (commandResult.response) {
+                        // It was a command
+                        aiResponse = commandResult.response;
+                        
+                        // Reload data if something changed
+                        if (commandResult.action !== 'notACommand') {
+                            await loadData();
+                        }
+                    } else {
+                        // Not a command, process as natural language
+                        aiResponse = await processNaturalLanguage(currentInput);
+                    }
+
+                    const aiMessage = {
+                        type: 'ai',
+                        text: aiResponse,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    };
+
+                    setChatMessages(prev => [...prev, aiMessage]);
+                    await callAPI('logChat', { message: aiMessage });
+
+                } catch (err) {
+                    console.error('Chat error:', err);
+                    setChatMessages(prev => [...prev, {
+                        type: 'ai',
+                        text: 'Sorry, I encountered an error. Please try again.',
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    }]);
+                }
+
+                setIsTyping(false);
+            }
+
+            async function processNaturalLanguage(input) {
+                const lower = input.toLowerCase();
+                const todayIndex = getCurrentDayIndex();
+
+                // Food logging
+                if (lower.match(/\b(ate|eat|eating|had|breakfast|lunch|dinner|food|meal)\b/)) {
+                    await callAPI('logFood', { entry: input });
+
+                    if (lower.includes('breakfast') && lower.match(/\b(eggs|turkey|chicken|protein|bacon)\b/)) {
+                        // Find protein breakfast habit and check it
+                        const proteinHabit = habits.find(h => h.name.toLowerCase().includes('protein breakfast'));
+                        if (proteinHabit) {
+                            await callAPI('updateHabit', {
+                                habitId: proteinHabit.id,
+                                dayIndex: todayIndex,
+                                checked: true
+                            });
+                            await loadData();
+                        }
+                        return "✓ Protein breakfast logged! That's brain fuel right there. Great choice for sustained energy. +15 XP 💪";
+                    }
+
+                    if (lower.match(/\b(salad|vegetables|veggies|broccoli|spinach|kale|greens)\b/)) {
+                        const veggieHabit = habits.find(h => h.name.toLowerCase().includes('veggies'));
+                        if (veggieHabit) {
+                            await callAPI('updateHabit', {
+                                habitId: veggieHabit.id,
+                                dayIndex: todayIndex,
+                                checked: true
+                            });
+                            await loadData();
+                        }
+                        return "✓ Veggies logged! Excellent for brain function and sustained energy. +10 XP 🥗";
+                    }
+
+                    return "Meal logged! For optimal productivity: protein + veggies + healthy fats. Check your nutrition tab! 🍽️";
+                }
+
+                // Work/Productivity
+                if (lower.match(/\b(worked|work|working|deep work|focused|focus|productive)\b/)) {
+                    if (lower.match(/\b(deep work|focused|90|pomodoro)\b/)) {
+                        const deepWorkHabit = habits.find(h => h.name.toLowerCase().includes('deep work'));
+                        if (deepWorkHabit) {
+                            await callAPI('updateHabit', {
+                                habitId: deepWorkHabit.id,
+                                dayIndex: todayIndex,
+                                checked: true
+                            });
+                            await loadData();
+                        }
+                        return "✓ Deep work session logged! That's high-value focus time. You're in flow state. +25 XP 🎯";
+                    }
+
+                    if (lower.match(/\b(started|start|8:30|8am)\b/)) {
+                        const startWorkHabit = habits.find(h => h.name.toLowerCase().includes('start work'));
+                        if (startWorkHabit) {
+                            await callAPI('updateHabit', {
+                                habitId: startWorkHabit.id,
+                                dayIndex: todayIndex,
+                                checked: true
+                            });
+                            await loadData();
+                        }
+                        return "✓ Started work on time! Early starts = productive days. +15 XP 💼";
+                    }
+
+                    return "Work logged! Aim for 2x 90-minute deep work blocks for peak productivity. 🚀";
+                }
+
+                // Exercise
+                if (lower.match(/\b(workout|exercise|exercised|gym|ran|running|lifted)\b/)) {
+                    const workoutHabit = habits.find(h => h.name.toLowerCase().includes('workout'));
+                    if (workoutHabit) {
+                        await callAPI('updateHabit', {
+                            habitId: workoutHabit.id,
+                            dayIndex: todayIndex,
+                            checked: true
+                        });
+                        await loadData();
+                    }
+                    return "✓ Workout logged! Exercise boosts focus for hours. Get protein within 30min for recovery. +30 XP 💪";
+                }
+
+                // Sleep
+                if (lower.match(/\b(slept|sleep|sleeping|bed|woke|wake)\b/)) {
+                    const hoursMatch = lower.match(/(\d+\.?\d*)\s*(hours?|hrs?)/);
+                    if (hoursMatch) {
+                        const hours = parseFloat(hoursMatch[1]);
+                        if (hours >= 7) {
+                            const sleepHabit = habits.find(h => h.name.toLowerCase().includes('7+ hours'));
+                            if (sleepHabit) {
+                                await callAPI('updateHabit', {
+                                    habitId: sleepHabit.id,
+                                    dayIndex: todayIndex,
+                                    checked: true
+                                });
+                                await loadData();
+                            }
+                            return `✓ Great sleep! ${hours} hours is optimal for cognitive performance. Keep it up! +20 XP 😴`;
+                        } else {
+                            return `Only ${hours} hours? Your brain needs 7+ for peak performance. Prioritize sleep tonight. 🌙`;
+                        }
+                    }
+                    return "Sleep logged! Consistency is key - aim for 7-8 hours nightly. 😴";
+                }
+
+                // Phone
+                if (lower.match(/\b(phone|screen time|distracted|scrolling)\b/)) {
+                    const hoursMatch = lower.match(/(\d+\.?\d*)\s*(hours?|hrs?|h)/);
+                    if (hoursMatch) {
+                        const hours = parseFloat(hoursMatch[1]);
+                        if (hours <= 2) {
+                            const phoneHabit = habits.find(h => h.name.toLowerCase().includes('phone time'));
+                            if (phoneHabit) {
+                                await callAPI('updateHabit', {
+                                    habitId: phoneHabit.id,
+                                    dayIndex: todayIndex,
+                                    checked: true
+                                });
+                                await loadData();
+                            }
+                            return `✓ Excellent phone discipline! ${hours}hrs is well under target. Sharp focus! +20 XP 📱`;
+                        } else {
+                            return `${hours}hrs is high. Try app limits & phone-free work blocks for better productivity. 📵`;
+                        }
+                    }
+                    return "Phone usage logged. Target: under 3 hours daily for optimal focus. 📱";
+                }
+
+                // Productivity issues
+                if (lower.match(/\b(not productive|brain|tired|sluggish|foggy|not focused)\b/)) {
+                    if (!stats) {
+                        return "Let me check your data...";
+                    }
+
+                    let advice = "Let's troubleshoot your productivity:\n\n";
+
+                    if (stats.categories.sleep < 50) {
+                        advice += "🌙 SLEEP: Your sleep score is low. This is likely the #1 issue. Prioritize 7+ hours tonight.\n\n";
+                    }
+
+                    if (stats.categories.nutrition < 50) {
+                        advice += "🍽️ NUTRITION: Not hitting nutrition goals. Try:\n";
+                        advice += "• Protein breakfast (eggs, Greek yogurt)\n";
+                        advice += "• Omega-3s (salmon, walnuts) for brain\n";
+                        advice += "• Magnesium supplement\n";
+                        advice += "• 2L+ water daily\n\n";
+                    }
+
+                    advice += "⚡ QUICK FIXES NOW:\n";
+                    advice += "• 10-min walk outside\n";
+                    advice += "• 20 push-ups (blood flow)\n";
+                    advice += "• Protein snack + water\n";
+                    advice += "• 2min deep breathing\n";
+                    advice += "• Switch to most interesting task";
+
+                    return advice;
+                }
+
+                // Default
+                return "I'm your AI productivity coach! Tell me:\n• What you ate/drank\n• Work sessions\n• Exercise\n• Sleep\n• How you're feeling\n\nOr try commands like:\n• 'add habit: meditation'\n• 'delete habit: X'\n• 'complete workout'\n• 'show stats'\n• 'add project: Website redesign'";
+            }
+
+            function getCurrentDayIndex() {
+                const day = new Date().getDay();
+                return day === 0 ? 6 : day - 1;
+            }
+
+            if (!configured) {
+                return (
+                    <div className="app">
+                        <div className="config-notice">
+                            ⚠️ Please configure your Google Apps Script URL in the code (line 352)
+                            <a href="#setup" onClick={() => alert('See setup instructions in GoogleAppsScript.js file')}>
+                                Setup Instructions
+                            </a>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (loading) {
+                return (
+                    <div className="app">
+                        <header className="header">
+                            <div className="logo">⚡ PRODUCTIVE</div>
+                        </header>
+                        <main className="main-content">
+                            <div className="loading">Loading your data from Google Sheets...</div>
+                        </main>
+                    </div>
+                );
+            }
+
+            if (error) {
+                return (
+                    <div className="app">
+                        <header className="header">
+                            <div className="logo">⚡ PRODUCTIVE</div>
+                        </header>
+                        <main className="main-content">
+                            <div className="error">
+                                <strong>Error:</strong> {error}
+                                <br /><br />
+                                <button onClick={loadData} style={{
+                                    background: 'var(--accent-primary)',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '0.5rem 1rem',
+                                    borderRadius: '0.5rem',
+                                    cursor: 'pointer'
+                                }}>
+                                    Retry
+                                </button>
+                            </div>
+                        </main>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="app">
+                    <header className="header">
+                        <div className="logo">⚡ PRODUCTIVE</div>
+                        {stats && (
+                            <div className="header-stats">
+                                <div className="stat-badge">
+                                    <div className="stat-label">Today</div>
+                                    <div className="stat-value">{stats.todayCompletion}%</div>
+                                </div>
+                                <div className="stat-badge">
+                                    <div className="stat-label">Week</div>
+                                    <div className="stat-value">{stats.weekCompletion}%</div>
+                                </div>
+                                <div className="stat-badge">
+                                    <div className="stat-label">Streak</div>
+                                    <div className="stat-value">🔥 {stats.streak}</div>
+                                </div>
+                                <div className="stat-badge">
+                                    <div className="stat-label">Level</div>
+                                    <div className="stat-value">12</div>
+                                </div>
+                            </div>
+                        )}
+                    </header>
+
+                    <main className="main-content">
+                        {/* Category Scores */}
+                        {stats && (
+                            <div className="dashboard-grid">
+                                <div className="score-card">
+                                    <div className="score-card-icon">💼</div>
+                                    <ProgressRing percentage={stats.categories.work || 0} />
+                                    <div className="score-card-label">Work</div>
+                                </div>
+                                <div className="score-card">
+                                    <div className="score-card-icon">🎯</div>
+                                    <ProgressRing percentage={stats.categories.focus || 0} />
+                                    <div className="score-card-label">Focus</div>
+                                </div>
+                                <div className="score-card">
+                                    <div className="score-card-icon">💪</div>
+                                    <ProgressRing percentage={stats.categories.health || 0} />
+                                    <div className="score-card-label">Health</div>
+                                </div>
+                                <div className="score-card">
+                                    <div className="score-card-icon">😴</div>
+                                    <ProgressRing percentage={stats.categories.sleep || 0} />
+                                    <div className="score-card-label">Sleep</div>
+                                </div>
+                                <div className="score-card">
+                                    <div className="score-card-icon">🍳</div>
+                                    <ProgressRing percentage={stats.categories.nutrition || 0} />
+                                    <div className="score-card-label">Nutrition</div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Habits Table */}
+                        <div className="habits-section">
+                            <h2 className="section-title">
+                                <span>📅</span>
+                                Weekly Habit Tracker
+                            </h2>
+                            <table className="habits-table">
+                                <thead>
+                                    <tr>
+                                        <th>HABIT</th>
+                                        <th>MON</th>
+                                        <th>TUE</th>
+                                        <th>WED</th>
+                                        <th>THU</th>
+                                        <th>FRI</th>
+                                        <th>SAT</th>
+                                        <th>SUN</th>
+                                        <th>WEEK %</th>
+                                        <th>STREAK</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {habits.map(habit => {
+                                        const weekProgress = Math.round((habit.checks.filter(c => c).length / 7) * 100);
+                                        const streak = habit.checks.slice(-7).every(c => c) ? 7 : 0;
+                                        
+                                        return (
+                                            <tr key={habit.id}>
+                                                <td>
+                                                    <div className="habit-name">
+                                                        <span>{habit.icon}</span>
+                                                        <span>{habit.name}</span>
+                                                        <span className={`habit-category category-${habit.category}`}>
+                                                            {habit.category}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                {habit.checks.map((checked, dayIndex) => (
+                                                    <td key={dayIndex} className="check-cell">
+                                                        <div
+                                                            className={`checkbox ${checked ? 'checked' : ''}`}
+                                                            onClick={() => toggleHabit(habit.id, dayIndex, checked)}
+                                                        />
+                                                    </td>
+                                                ))}
+                                                <td className="week-progress">{weekProgress}%</td>
+                                                <td className="streak-count">
+                                                    {streak > 0 ? '🔥' : ''} {streak}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </main>
+
+                    {/* Chat Bar */}
+                    <div className={`chat-bar ${chatExpanded ? 'expanded' : ''}`}>
+                        {chatExpanded && (
+                            <div className="chat-messages">
+                                {chatMessages.length === 0 && (
+                                    <div className="chat-message ai">
+                                        <div>Hi! I can track your habits, add/delete habits, manage projects, and give productivity advice. Try: "I ate breakfast", "add habit: meditation", "show stats", "I'm feeling unproductive"</div>
+                                    </div>
+                                )}
+                                {chatMessages.map((msg, idx) => (
+                                    <div key={idx} className={`chat-message ${msg.type}`}>
+                                        <div style={{ whiteSpace: 'pre-line' }}>{msg.text}</div>
+                                        <div className="chat-message-time">{msg.time}</div>
+                                    </div>
+                                ))}
+                                {isTyping && (
+                                    <div className="chat-message ai">
+                                        <div className="typing-indicator">
+                                            <div className="typing-dot"></div>
+                                            <div className="typing-dot"></div>
+                                            <div className="typing-dot"></div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        
+                        <div className="chat-input-wrapper">
+                            <button
+                                className="chat-toggle"
+                                onClick={() => setChatExpanded(!chatExpanded)}
+                            >
+                                🤖
+                            </button>
+                            <input
+                                type="text"
+                                className="chat-input"
+                                placeholder="Type: 'add habit: meditation', 'I ate breakfast', 'show stats', 'delete habit: X'..."
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                            />
+                            <button className="chat-send" onClick={handleSendMessage}>
+                                Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
