@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity System</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-white: #ffffff;
+            --bg-light: #f8fafc;
+            --bg-card: #ffffff;
+            --border-light: #e2e8f0;
+            --border-medium: #cbd5e1;
+            --blue-primary: #3b82f6;
+            --blue-dark: #2563eb;
+            --blue-light: #dbeafe;
+            --green-primary: #10b981;
+            --green-dark: #059669;
+            --green-light: #d1fae5;
+            --text-dark: #0f172a;
+            --text-medium: #475569;
+            --text-light: #64748b;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.5;
+        }
+
+        .app {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--blue-primary);
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--blue-primary);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        /* Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Win Section */
+        .win-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .win-input:focus {
+            outline: none;
+            border-color: var(--blue-primary);
+            box-shadow: 0 0 0 3px var(--blue-light);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .quick-btn {
+            padding: 0.75rem;
+            background: var(--blue-light);
+            border: 1px solid var(--blue-primary);
+            border-radius: 6px;
+            color: var(--blue-dark);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .quick-btn:hover {
+            background: var(--blue-primary);
+            color: white;
+        }
+
+        .quick-btn.active {
+            background: var(--blue-primary);
+            color: white;
+        }
+
+        /* Monthly Grid */
+        .monthly-grid-section {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .month-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .month-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .month-completion {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .completion-bar {
+            width: 150px;
+            height: 8px;
+            background: var(--border-light);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .completion-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--blue-primary), var(--green-primary));
+            transition: width 0.3s;
+        }
+
+        .completion-text {
+            font-weight: 700;
+            color: var(--blue-primary);
+            font-size: 1.1rem;
+        }
+
+        /* Grid Table */
+        .grid-container {
+            overflow-x: auto;
+        }
+
+        .grid-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        .grid-table th {
+            background: var(--bg-light);
+            padding: 0.4rem 0.3rem;
+            text-align: center;
+            font-weight: 700;
+            color: var(--text-medium);
+            border: 1px solid var(--border-light);
+            font-size: 0.7rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .grid-table th.activity-col {
+            text-align: left;
+            min-width: 150px;
+            max-width: 150px;
+        }
+
+        .grid-table th.week-header {
+            background: var(--blue-light);
+            color: var(--blue-dark);
+            font-weight: 800;
+        }
+
+        .grid-table td {
+            padding: 0.3rem;
+            border: 1px solid var(--border-light);
+            text-align: center;
+        }
+
+        .grid-table td.activity-name {
+            text-align: left;
+            font-weight: 600;
+            padding-left: 0.75rem;
+            color: var(--text-dark);
+            font-size: 0.8rem;
+        }
+
+        .activity-category {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            margin-left: 0.3rem;
+            text-transform: uppercase;
+        }
+
+        .cat-core { background: var(--blue-light); color: var(--blue-dark); }
+        .cat-optional { background: var(--green-light); color: var(--green-dark); }
+
+        .grid-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-medium);
+            border-radius: 3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            background: white;
+        }
+
+        .grid-checkbox:hover {
+            border-color: var(--blue-primary);
+            transform: scale(1.1);
+        }
+
+        .grid-checkbox.checked {
+            background: var(--green-primary);
+            border-color: var(--green-primary);
+        }
+
+        .grid-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        /* Progress Column */
+        .progress-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem 0.5rem;
+        }
+
+        .mini-progress {
+            flex: 1;
+            height: 6px;
+            background: var(--border-light);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .mini-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--blue-primary), var(--green-primary));
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: var(--text-medium);
+            min-width: 35px;
+        }
+
+        /* Meals Section */
+        .meals-section {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .meal-profile-select {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .profile-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid var(--border-light);
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .profile-btn:hover {
+            border-color: var(--blue-primary);
+        }
+
+        .profile-btn.active {
+            background: var(--blue-primary);
+            border-color: var(--blue-primary);
+            color: white;
+        }
+
+        .meal-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+        }
+
+        .meal-card {
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            padding: 0.75rem;
+            background: var(--bg-light);
+        }
+
+        .meal-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        .meal-template {
+            font-size: 0.75rem;
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+
+        .meal-suggestion {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--blue-dark);
+        }
+
+        /* One-Line Logger */
+        .logger-section {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .logger-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .logger-input:focus {
+            outline: none;
+            border-color: var(--green-primary);
+            box-shadow: 0 0 0 3px var(--green-light);
+        }
+
+        .logger-response {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: var(--green-light);
+            border-left: 3px solid var(--green-primary);
+            border-radius: 4px;
+            font-size: 0.85rem;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Settings Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-medium);
+            border-radius: 4px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--blue-primary);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--blue-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--blue-dark);
+        }
+
+        .btn-secondary {
+            background: var(--border-light);
+            color: var(--text-dark);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-medium);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            .meal-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .meal-grid {
+                grid-template-columns: 1fr;
+            }
+            .header-stats {
+                gap: 1rem;
+            }
+            .stat-value {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyz5FGJW5trBOU-4NhSyvXESw-itxZjoWX1x-3HGoEPnE0CoDi2tIJ5O1LUMA_YSr6-/exec';
+
+        function App() {
+            const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+            const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+            const [todayWin, setTodayWin] = useState('');
+            const [dayMode, setDayMode] = useState('normal'); // full-send, normal, minimum
+            const [mealProfile, setMealProfile] = useState('balanced'); // deep-work, balanced, recovery
+            const [loggerInput, setLoggerInput] = useState('');
+            const [loggerResponse, setLoggerResponse] = useState('');
+            const [showSettings, setShowSettings] = useState(false);
+            
+            const [settings, setSettings] = useState({
+                weight: '',
+                height: '',
+                age: '',
+                foodDislikes: '',
+                dietaryRestrictions: '',
+                mealTime: '20',
+                budgetMode: false,
+                sameBreakfast: false
+            });
+
+            const [activities, setActivities] = useState([
+                { id: 1, name: "Today's Win", category: 'core', archived: false },
+                { id: 2, name: 'Deep work block 1', category: 'core', archived: false },
+                { id: 3, name: 'Deep work block 2', category: 'core', archived: false },
+                { id: 4, name: 'Exercise/Movement', category: 'core', archived: false },
+                { id: 5, name: 'Protein breakfast', category: 'core', archived: false },
+                { id: 6, name: 'No-crash lunch', category: 'core', archived: false },
+                { id: 7, name: 'Admin triage', category: 'core', archived: false },
+                { id: 8, name: 'Shutdown ritual', category: 'core', archived: false },
+                { id: 9, name: 'Learning (10min)', category: 'optional', archived: false },
+                { id: 10, name: 'Social connection', category: 'optional', archived: false },
+                { id: 11, name: 'Workspace reset', category: 'optional', archived: false },
+                { id: 12, name: 'Meal prep', category: 'optional', archived: false }
+            ]);
+
+            const [gridData, setGridData] = useState(() => {
+                const cached = localStorage.getItem('gridData');
+                if (cached) return JSON.parse(cached);
+                
+                const data = {};
+                activities.forEach(activity => {
+                    data[activity.id] = Array(31).fill(false);
+                });
+                return data;
+            });
+
+            useEffect(() => {
+                localStorage.setItem('gridData', JSON.stringify(gridData));
+            }, [gridData]);
+
+            function getDaysInMonth(month, year) {
+                return new Date(year, month + 1, 0).getDate();
+            }
+
+            function getWeeks(month, year) {
+                const daysInMonth = getDaysInMonth(month, year);
+                const weeks = [];
+                let currentWeek = [];
+                
+                for (let day = 1; day <= daysInMonth; day++) {
+                    currentWeek.push(day);
+                    if (currentWeek.length === 7 || day === daysInMonth) {
+                        weeks.push([...currentWeek]);
+                        currentWeek = [];
+                    }
+                }
+                
+                return weeks;
+            }
+
+            function toggleCheckbox(activityId, day) {
+                setGridData(prev => ({
+                    ...prev,
+                    [activityId]: prev[activityId].map((checked, i) => 
+                        i === day - 1 ? !checked : checked
+                    )
+                }));
+            }
+
+            function calculateProgress(activityId) {
+                const daysInMonth = getDaysInMonth(currentMonth, currentYear);
+                const checks = gridData[activityId] || Array(31).fill(false);
+                const completed = checks.slice(0, daysInMonth).filter(c => c).length;
+                return Math.round((completed / daysInMonth) * 100);
+            }
+
+            function calculateMonthCompletion() {
+                const activeActivities = activities.filter(a => !a.archived);
+                if (activeActivities.length === 0) return 0;
+                
+                const totalProgress = activeActivities.reduce((sum, activity) => {
+                    return sum + calculateProgress(activity.id);
+                }, 0);
+                
+                return Math.round(totalProgress / activeActivities.length);
+            }
+
+            function handleLoggerSubmit() {
+                if (!loggerInput.trim()) return;
+                
+                const input = loggerInput.toLowerCase();
+                let response = '';
+                
+                // Parse "did X min deep work"
+                if (input.match(/did|finished|completed.*\d+.*min.*deep work|focus/)) {
+                    const minutes = input.match(/\d+/)?.[0] || '0';
+                    response = `✓ Logged ${minutes} min deep work! That's focused productivity. Score updated. Next: Check off in your grid above.`;
+                }
+                // Parse "ate X"
+                else if (input.match(/ate|had.*breakfast|lunch|dinner/)) {
+                    if (input.includes('breakfast')) {
+                        response = `✓ Breakfast logged! Make sure it had protein for stable energy. Check "Protein breakfast" in your grid.`;
+                    } else if (input.includes('lunch')) {
+                        response = `✓ Lunch logged! Was it a no-crash meal? (Protein + veg + smart carb) Mark "No-crash lunch" above.`;
+                    } else {
+                        response = `✓ Meal logged! Track your energy in 30min. Did it support or hurt your focus?`;
+                    }
+                }
+                // Brain fog
+                else if (input.match(/brain fog|tired|can't focus|low energy/)) {
+                    response = `Brain fog detected. Quick protocol:\n1. 10min walk outside\n2. Big glass of water\n3. Protein snack\n4. Check last meal - was it high-carb?\n\nYou have time left today. Switch to easiest task first to build momentum.`;
+                }
+                // Default
+                else {
+                    response = `✓ Logged! Type things like: "did 45min deep work", "ate chicken bowl", "brain fog after lunch", "feeling sharp today"`;
+                }
+                
+                setLoggerResponse(response);
+                setLoggerInput('');
+                
+                setTimeout(() => setLoggerResponse(''), 8000);
+            }
+
+            function getMealSuggestions() {
+                const suggestions = {
+                    'deep-work': {
+                        breakfast: 'Greek yogurt + berries + walnuts',
+                        lunch: 'Salmon bowl + quinoa + broccoli',
+                        snack: 'Almonds + dark chocolate',
+                        dinner: 'Chicken + sweet potato + spinach'
+                    },
+                    'balanced': {
+                        breakfast: 'Eggs + avocado toast',
+                        lunch: 'Turkey sandwich + side salad',
+                        snack: 'Apple + peanut butter',
+                        dinner: 'Pasta + chicken + vegetables'
+                    },
+                    'recovery': {
+                        breakfast: 'Oatmeal + banana + honey',
+                        lunch: 'Soup + whole grain bread',
+                        snack: 'Trail mix',
+                        dinner: 'Salmon + rice + asparagus'
+                    }
+                };
+                
+                return suggestions[mealProfile] || suggestions.balanced;
+            }
+
+            const weeks = getWeeks(currentMonth, currentYear);
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const meals = getMealSuggestions();
+            const activeActivities = activities.filter(a => !a.archived);
+
+            return (
+                <div className="app">
+                    {/* Header */}
+                    <div className="header">
+                        <div className="logo">⚡ Productivity System</div>
+                        <div className="header-stats">
+                            <div className="stat">
+                                <div className="stat-value">{calculateMonthCompletion()}%</div>
+                                <div className="stat-label">Month</div>
+                            </div>
+                            <div className="stat">
+                                <div className="stat-value">
+                                    {Math.round(activeActivities.reduce((sum, a) => sum + calculateProgress(a.id), 0) / Math.max(activeActivities.length, 1))}%
+                                </div>
+                                <div className="stat-label">Today</div>
+                            </div>
+                            <div className="stat">
+                                <div className="stat-value">12</div>
+                                <div className="stat-label">Streak</div>
+                            </div>
+                            <button className="btn btn-secondary" onClick={() => setShowSettings(true)}>
+                                Settings
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Dashboard */}
+                    <div className="dashboard">
+                        <div className="card">
+                            <div className="card-title">🎯 Today's Win</div>
+                            <input
+                                type="text"
+                                className="win-input"
+                                placeholder="If I only do ONE thing today, it's..."
+                                value={todayWin}
+                                onChange={(e) => setTodayWin(e.target.value)}
+                            />
+                            <div className="quick-actions">
+                                <button 
+                                    className={`quick-btn ${dayMode === 'full-send' ? 'active' : ''}`}
+                                    onClick={() => setDayMode('full-send')}
+                                >
+                                    🔥 Full Send
+                                </button>
+                                <button 
+                                    className={`quick-btn ${dayMode === 'normal' ? 'active' : ''}`}
+                                    onClick={() => setDayMode('normal')}
+                                >
+                                    ⚡ Normal
+                                </button>
+                                <button 
+                                    className={`quick-btn ${dayMode === 'minimum' ? 'active' : ''}`}
+                                    onClick={() => setDayMode('minimum')}
+                                >
+                                    🎯 Minimum Viable
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="card">
+                            <div className="card-title">💡 Adaptive Guidance</div>
+                            <div style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'var(--text-medium)' }}>
+                                {dayMode === 'full-send' && (
+                                    <>
+                                        <strong>Full Send Mode Active</strong><br/>
+                                        → 3+ deep work blocks<br/>
+                                        → High-protein meals<br/>
+                                        → No social media until 6pm
+                                    </>
+                                )}
+                                {dayMode === 'normal' && (
+                                    <>
+                                        <strong>Normal Day</strong><br/>
+                                        → 2 deep work blocks minimum<br/>
+                                        → Balanced meals<br/>
+                                        → Regular check-ins
+                                    </>
+                                )}
+                                {dayMode === 'minimum' && (
+                                    <>
+                                        <strong>Minimum Viable Day</strong><br/>
+                                        → Complete your Win<br/>
+                                        → 1 deep work block<br/>
+                                        → Basic self-care only
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* One-Line Logger */}
+                    <div className="logger-section">
+                        <div className="card-title">📝 Quick Log</div>
+                        <input
+                            type="text"
+                            className="logger-input"
+                            placeholder='Type: "did 45min deep work on landing page" or "ate chicken bowl" or "brain fog"'
+                            value={loggerInput}
+                            onChange={(e) => setLoggerInput(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleLoggerSubmit()}
+                        />
+                        {loggerResponse && (
+                            <div className="logger-response">
+                                {loggerResponse}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Monthly Grid */}
+                    <div className="monthly-grid-section">
+                        <div className="month-header">
+                            <div className="month-title">
+                                {monthNames[currentMonth]} {currentYear}
+                            </div>
+                            <div className="month-completion">
+                                <span style={{ fontSize: '0.85rem', color: 'var(--text-medium)', fontWeight: 600 }}>
+                                    Overall Completion
+                                </span>
+                                <div className="completion-bar">
+                                    <div className="completion-fill" style={{ width: `${calculateMonthCompletion()}%` }}></div>
+                                </div>
+                                <div className="completion-text">{calculateMonthCompletion()}%</div>
+                            </div>
+                        </div>
+
+                        <div className="grid-container">
+                            <table className="grid-table">
+                                <thead>
+                                    <tr>
+                                        <th className="activity-col">Activity</th>
+                                        {weeks.map((week, weekIdx) => (
+                                            <React.Fragment key={weekIdx}>
+                                                <th className="week-header" colSpan={week.length}>
+                                                    Week {weekIdx + 1}
+                                                </th>
+                                            </React.Fragment>
+                                        ))}
+                                        <th>Progress</th>
+                                    </tr>
+                                    <tr>
+                                        <th className="activity-col"></th>
+                                        {weeks.map((week, weekIdx) => (
+                                            <React.Fragment key={weekIdx}>
+                                                {week.map(day => (
+                                                    <th key={day}>{day}</th>
+                                                ))}
+                                            </React.Fragment>
+                                        ))}
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {activeActivities.map(activity => (
+                                        <tr key={activity.id}>
+                                            <td className="activity-name">
+                                                {activity.name}
+                                                <span className={`activity-category cat-${activity.category}`}>
+                                                    {activity.category}
+                                                </span>
+                                            </td>
+                                            {weeks.map((week, weekIdx) => (
+                                                <React.Fragment key={weekIdx}>
+                                                    {week.map(day => (
+                                                        <td key={day}>
+                                                            <div
+                                                                className={`grid-checkbox ${gridData[activity.id]?.[day - 1] ? 'checked' : ''}`}
+                                                                onClick={() => toggleCheckbox(activity.id, day)}
+                                                            ></div>
+                                                        </td>
+                                                    ))}
+                                                </React.Fragment>
+                                            ))}
+                                            <td>
+                                                <div className="progress-cell">
+                                                    <div className="mini-progress">
+                                                        <div 
+                                                            className="mini-progress-fill" 
+                                                            style={{ width: `${calculateProgress(activity.id)}%` }}
+                                                        ></div>
+                                                    </div>
+                                                    <div className="progress-text">
+                                                        {calculateProgress(activity.id)}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Meals Section */}
+                    <div className="meals-section">
+                        <div className="card-title">🍽️ Brain-Powered Meals</div>
+                        <div className="meal-profile-select">
+                            <button 
+                                className={`profile-btn ${mealProfile === 'deep-work' ? 'active' : ''}`}
+                                onClick={() => setMealProfile('deep-work')}
+                            >
+                                🎯 Deep Work Days
+                            </button>
+                            <button 
+                                className={`profile-btn ${mealProfile === 'balanced' ? 'active' : ''}`}
+                                onClick={() => setMealProfile('balanced')}
+                            >
+                                ⚖️ Balanced Days
+                            </button>
+                            <button 
+                                className={`profile-btn ${mealProfile === 'recovery' ? 'active' : ''}`}
+                                onClick={() => setMealProfile('recovery')}
+                            >
+                                🌙 Recovery Days
+                            </button>
+                        </div>
+
+                        <div className="meal-grid">
+                            <div className="meal-card">
+                                <div className="meal-title">☀️ Breakfast (Focus Start)</div>
+                                <div className="meal-template">
+                                    Protein + Fiber + Fat<br/>
+                                    → Stable energy all morning
+                                </div>
+                                <div className="meal-suggestion">{meals.breakfast}</div>
+                            </div>
+
+                            <div className="meal-card">
+                                <div className="meal-title">🌤️ Lunch (No-Crash)</div>
+                                <div className="meal-template">
+                                    Protein + Veg + Smart Carb<br/>
+                                    → No afternoon slump
+                                </div>
+                                <div className="meal-suggestion">{meals.lunch}</div>
+                            </div>
+
+                            <div className="meal-card">
+                                <div className="meal-title">⚡ Snack (Rescue)</div>
+                                <div className="meal-template">
+                                    Quick energy boost<br/>
+                                    → Avoid derailment
+                                </div>
+                                <div className="meal-suggestion">{meals.snack}</div>
+                            </div>
+
+                            <div className="meal-card">
+                                <div className="meal-title">🌙 Dinner (Recovery)</div>
+                                <div className="meal-template">
+                                    Protein + Veg + Carbs<br/>
+                                    → Sleep support
+                                </div>
+                                <div className="meal-suggestion">{meals.dinner}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Settings Modal */}
+                    {showSettings && (
+                        <div className="modal-overlay" onClick={() => setShowSettings(false)}>
+                            <div className="modal" onClick={(e) => e.stopPropagation()}>
+                                <div className="modal-title">⚙️ Settings</div>
+                                
+                                <div className="form-group">
+                                    <label className="form-label">Weight (lbs)</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-input"
+                                        value={settings.weight}
+                                        onChange={(e) => setSettings({...settings, weight: e.target.value})}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Height (inches)</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-input"
+                                        value={settings.height}
+                                        onChange={(e) => setSettings({...settings, height: e.target.value})}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Age</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-input"
+                                        value={settings.age}
+                                        onChange={(e) => setSettings({...settings, age: e.target.value})}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Food Dislikes (comma-separated)</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-input"
+                                        placeholder="tomatoes, red sauce, olives"
+                                        value={settings.foodDislikes}
+                                        onChange={(e) => setSettings({...settings, foodDislikes: e.target.value})}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Dietary Restrictions</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-input"
+                                        placeholder="dairy-free, gluten-free, vegetarian"
+                                        value={settings.dietaryRestrictions}
+                                        onChange={(e) => setSettings({...settings, dietaryRestrictions: e.target.value})}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Max Time Per Meal (minutes)</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-input"
+                                        value={settings.mealTime}
+                                        onChange={(e) => setSettings({...settings, mealTime: e.target.value})}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                        <input 
+                                            type="checkbox"
+                                            checked={settings.budgetMode}
+                                            onChange={(e) => setSettings({...settings, budgetMode: e.target.checked})}
+                                        />
+                                        <span className="form-label" style={{ margin: 0 }}>Budget Mode (Aldi pricing)</span>
+                                    </label>
+                                </div>
+
+                                <div className="form-group">
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                        <input 
+                                            type="checkbox"
+                                            checked={settings.sameBreakfast}
+                                            onChange={(e) => setSettings({...settings, sameBreakfast: e.target.checked})}
+                                        />
+                                        <span className="form-label" style={{ margin: 0 }}>Same breakfast every day</span>
+                                    </label>
+                                </div>
+
+                                <div className="modal-actions">
+                                    <button className="btn btn-primary" onClick={() => setShowSettings(false)}>
+                                        Save Settings
+                                    </button>
+                                    <button className="btn btn-secondary" onClick={() => setShowSettings(false)}>
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
